@@ -1,0 +1,27 @@
+.PHONY: dev ui install test lint
+
+install:
+	uv sync
+
+dev:
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+ui:
+	@lsof -ti:8001 | xargs kill -9 2>/dev/null || true
+	chainlit run ui.py --port 8001
+
+test:
+	pytest tests/ -v
+
+lint:
+	ruff check app/ tests/
+
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down

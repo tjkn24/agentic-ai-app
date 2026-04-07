@@ -1,0 +1,22 @@
+[project]
+# App name shown in the browser tab and header
+name = "Agentic AI"
+
+# Allow users to send multiple messages without waiting (non-blocking)
+allow_origins = ["http://localhost:8000"]
+
+[UI]
+# Name shown in the chat header
+name = "Agentic AI Assistant"
+
+# Subtitle shown under the name
+description = "Powered by LangGraph + FastAPI"
+
+# Default to light theme (options: light, dark)
+default_theme = "light"
+
+# Collapse the sidebar by default on load
+default_collapse_content = true
+
+[meta]
+generated_by = "1.0.0"
