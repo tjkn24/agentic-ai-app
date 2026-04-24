@@ -6,14 +6,17 @@ import structlog
 
 log = structlog.get_logger()
 
+
 @dataclass
 class LLMResponse:
     text: str
     tool_call: str | None = None
     usage: dict | None = None
 
+
 def retry(max_attempts: int = 3, delay: float = 1.0):
     """Exponential backoff retry decorator for LLM calls."""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -23,11 +26,16 @@ def retry(max_attempts: int = 3, delay: float = 1.0):
                 except Exception as e:
                     if attempt == max_attempts - 1:
                         raise
-                    wait = delay * (2 ** attempt)
-                    log.warning("llm_retry", attempt=attempt+1, wait=wait, error=str(e))
+                    wait = delay * (2**attempt)
+                    log.warning(
+                        "llm_retry", attempt=attempt + 1, wait=wait, error=str(e)
+                    )
                     await asyncio.sleep(wait)
+
         return wrapper
+
     return decorator
+
 
 class LLMService:
     """
@@ -38,16 +46,20 @@ class LLMService:
 
     @retry(max_attempts=3)
     async def chat(self, messages: list[dict]) -> LLMResponse:
-        """
-        Send messages to the LLM and return structured response.
-        Stub implementation — replace with real OpenAI / Ollama call.
-        """
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(
+            base_url=settings.OPENAI_BASE_URL,
+            api_key=settings.OPENAI_API_KEY or "ollama",
+        )
         log.info("llm_call", model=settings.DEFAULT_LLM_MODEL, messages=len(messages))
-        # TODO: replace stub with:
-        # from openai import AsyncOpenAI
-        # client = AsyncOpenAI(base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY)
-        # resp = await client.chat.completions.create(model=settings.DEFAULT_LLM_MODEL, messages=messages)
-        return LLMResponse(text="[LLM stub response]", usage={"tokens": 0})
+        resp = await client.chat.completions.create(
+            model=settings.DEFAULT_LLM_MODEL, messages=messages
+        )
+        return LLMResponse(
+            text=resp.choices[0].message.content,
+            usage=dict(resp.usage) if resp.usage else None,
+        )
 
     async def stream(self, messages: list[dict]):
         """Async generator — yields text chunks for streaming endpoint."""
