@@ -8,6 +8,8 @@ from app.core.middleware import RequestLoggingMiddleware
 from app.core.limiter import limiter
 from app.core.metrics import router as metrics_router
 from app.api.v1.api import router as api_router
+from fastapi.staticfiles import StaticFiles
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,6 +17,7 @@ async def lifespan(app: FastAPI):
     # TODO: initialise DB pool, Redis, LangSmith tracer here
     yield
     # TODO: close DB pool, Redis connections here
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -27,6 +30,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(RequestLoggingMiddleware)
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(metrics_router)
+
+app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
+
 
 @app.get("/health")
 async def health():
